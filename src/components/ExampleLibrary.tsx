@@ -127,7 +127,6 @@ export const ExampleLibrary: React.FC<ExampleLibraryProps> = ({ setProblem }) =>
   const handleLoadExample = (example: Problem) => {
     setProblem(example);
     
-    // Navigate to the "define-problem" tab after loading example
     const defineTab = document.querySelector('[value="define-problem"]') as HTMLElement;
     if (defineTab) {
       defineTab.click();
