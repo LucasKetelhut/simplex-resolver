@@ -60,10 +60,9 @@ export const ProblemInput: React.FC<ProblemInputProps> = ({ problem, setProblem 
 
   };
 
-  useEffect(() => {
-    const validationResult = validateProblemInput(problem);
-    // resultado disponível para inserção em um futuro log para possíveis correções de bug
-    }, [problem]);
+  // useEffect(() => {
+  //   const validationResult = validateProblemInput(problem);
+  // }, [problem]);
 
   return (
     <div className="space-y-6">

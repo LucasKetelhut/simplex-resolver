@@ -127,9 +127,16 @@ export const ExampleLibrary: React.FC<ExampleLibraryProps> = ({ setProblem }) =>
   const handleLoadExample = (example: Problem) => {
     setProblem(example);
     
-    const defineTab = document.querySelector('[value="define-problem"]') as HTMLElement;
+    const defineTab = document.querySelector('[data-value="define-problem"]') as HTMLElement;
     if (defineTab) {
       defineTab.click();
+    } else {
+      const tabs = document.querySelectorAll('[role="tab"]');
+      tabs.forEach(tab => {
+        if (tab.textContent?.includes('Definir Problema')) {
+          (tab as HTMLElement).click();
+        }
+      });
     }
   };
 
