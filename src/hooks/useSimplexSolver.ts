@@ -1,5 +1,6 @@
 import { useState, useCallback } from "react";
 import { Problem, SimplexResult, solveSimplexAlgorithm } from "@/lib/simplexAlgorithm";
+import { validateProblemInput } from "@/lib/validation";
 
 export const useSimplexSolver = () => {
   const [results, setResults] = useState<SimplexResult | null>(null);
@@ -11,8 +12,15 @@ export const useSimplexSolver = () => {
     setError(null);
     setResults(null);
     try {
-      const result = solveSimplexAlgorithm(problem);
-      setResults(result);
+      const validationResult = validateProblemInput(problem);
+      if (validationResult.isValid) {
+        console.log(validationResult);
+        const result = solveSimplexAlgorithm(problem);
+        setResults(result);
+      } else {
+        console.log(validationResult);
+        setError(validationResult.message)
+      }
     } catch (e: any) {
       setError(e.message);
     } finally {
