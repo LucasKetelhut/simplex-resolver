@@ -5,7 +5,8 @@ import { Separator } from "./ui/separator";
 import { Problem } from "@/lib/simplexAlgorithm";
 
 interface ExampleLibraryProps {
-  setProblem: React.Dispatch<React.SetStateAction<any>>;
+  setProblem: React.Dispatch<React.SetStateAction<Problem>>;
+  onExampleLoaded?: () => void;
 }
 
 interface ExampleProblem {
@@ -19,7 +20,8 @@ interface ExampleProblem {
 const exampleProblems: ExampleProblem[] = [
   {
     name: "Exemplo Dasgupta (2 variáveis)",
-    source: "Dasgupta, S., Papadimitriou, C. H., & Vazirani, U. V. (2008). Algorithms. McGraw-Hill.",
+    source:
+      "Dasgupta, S., Papadimitriou, C. H., & Vazirani, U. V. (2008). Algorithms. McGraw-Hill.",
     expectedSolution: "x₁ = 100, x₂ = 300, z = 1900",
     difficulty: "Básico",
     problem: {
@@ -34,7 +36,8 @@ const exampleProblems: ExampleProblem[] = [
   },
   {
     name: "Exemplo Dasgupta (3 variáveis)",
-    source: "Dasgupta, S., Papadimitriou, C. H., & Vazirani, U. V. (2008). Algorithms. McGraw-Hill.",
+    source:
+      "Dasgupta, S., Papadimitriou, C. H., & Vazirani, U. V. (2008). Algorithms. McGraw-Hill.",
     expectedSolution: "x₁ = 0, x₂ = 300, x₃ = 100, z = 3100",
     difficulty: "Intermediário",
     problem: {
@@ -50,7 +53,8 @@ const exampleProblems: ExampleProblem[] = [
   },
   {
     name: "Exemplo Cormen",
-    source: "Cormen, T. H., Leiserson, C. E., Rivest, R. L., & Stein, C. (2009). Introduction to Algorithms (3rd ed.). MIT Press.",
+    source:
+      "Cormen, T. H., Leiserson, C. E., Rivest, R. L., & Stein, C. (2009). Introduction to Algorithms (3rd ed.). MIT Press.",
     expectedSolution: "x₁ = 8, x₂ = 4, x₃ = 0, z = 28",
     difficulty: "Intermediário",
     problem: {
@@ -65,7 +69,8 @@ const exampleProblems: ExampleProblem[] = [
   },
   {
     name: "Exemplo Taha (Restrições Mistas)",
-    source: "Taha, H. A. (2017). Operations Research: An Introduction (10th ed.). Pearson.",
+    source:
+      "Taha, H. A. (2017). Operations Research: An Introduction (10th ed.). Pearson.",
     expectedSolution: "x₁ = 3, x₂ = 1.5, z = 21",
     difficulty: "Intermediário",
     problem: {
@@ -81,7 +86,8 @@ const exampleProblems: ExampleProblem[] = [
   },
   {
     name: "Caso Ilimitado (Arenales)",
-    source: "Arenales, M. N. (2006). Pesquisa Operacional: Modelagem e Algoritmos. Editora Atlas.",
+    source:
+      "Arenales, M. N. (2006). Pesquisa Operacional: Modelagem e Algoritmos. Editora Atlas.",
     difficulty: "Avançado",
     problem: {
       objective: [1, 2],
@@ -96,7 +102,8 @@ const exampleProblems: ExampleProblem[] = [
   },
   {
     name: "Caso Ilimitado (Taha)",
-    source: "Taha, H. A. (2017). Operations Research: An Introduction (10th ed.). Pearson.",
+    source:
+      "Taha, H. A. (2017). Operations Research: An Introduction (10th ed.). Pearson.",
     difficulty: "Avançado",
     problem: {
       objective: [2, 4],
@@ -123,24 +130,21 @@ const exampleProblems: ExampleProblem[] = [
   },
 ];
 
-export const ExampleLibrary: React.FC<ExampleLibraryProps> = ({ setProblem }) => {
+export const ExampleLibrary: React.FC<ExampleLibraryProps> = ({
+  setProblem,
+  onExampleLoaded,
+}) => {
   const handleLoadExample = (example: Problem) => {
     setProblem(example);
-    
-    const defineTab = document.querySelector('[data-value="define-problem"]') as HTMLElement;
-    if (defineTab) {
-      defineTab.click();
-    } else {
-      const tabs = document.querySelectorAll('[role="tab"]');
-      tabs.forEach(tab => {
-        if (tab.textContent?.includes('Definir Problema')) {
-          (tab as HTMLElement).click();
-        }
-      });
+
+    if (onExampleLoaded) {
+      onExampleLoaded();
     }
   };
 
-  const renderExamplesByDifficulty = (difficulty: ExampleProblem["difficulty"]) => {
+  const renderExamplesByDifficulty = (
+    difficulty: ExampleProblem["difficulty"]
+  ) => {
     return exampleProblems
       .filter((example) => example.difficulty === difficulty)
       .map((example, index) => (
@@ -215,18 +219,23 @@ export const ExampleLibrary: React.FC<ExampleLibraryProps> = ({ setProblem }) =>
             </li>
             <li>
               **Cormen, T. H., Leiserson, C. E., Rivest, R. L., & Stein, C.**
-              (2009). <em className="font-semibold">Introduction to Algorithms</em>
+              (2009).{" "}
+              <em className="font-semibold">Introduction to Algorithms</em>
               (3rd ed.). MIT Press.
             </li>
             <li>
               **Taha, H. A.** (2017).
-              <em className="font-semibold">Operations Research: An Introduction</em>
+              <em className="font-semibold">
+                Operations Research: An Introduction
+              </em>
               (10th ed.). Pearson.
             </li>
             <li>
               **Arenales, M. N.** (2006).
-              <em className="font-semibold">Pesquisa Operacional: Modelagem e Algoritmos</em>.
-              Editora Atlas.
+              <em className="font-semibold">
+                Pesquisa Operacional: Modelagem e Algoritmos
+              </em>
+              . Editora Atlas.
             </li>
           </ul>
           <p className="mt-4">

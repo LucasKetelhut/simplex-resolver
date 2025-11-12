@@ -16,6 +16,7 @@ function App() {
     constraints: [],
     type: "max",
   });
+  const [activeTab, setActiveTab] = useState("how-to-use");
   const [showResults, setShowResults] = useState(false);
   const { solveSimplex, results, error, loading } = useSimplexSolver();
 
@@ -48,7 +49,11 @@ function App() {
       </header>
 
       <main className="mx-auto max-w-6xl rounded-lg bg-white p-8 shadow-xl">
-        <Tabs defaultValue="define-problem" className="w-full">
+        <Tabs
+          value={activeTab}
+          onValueChange={setActiveTab}
+          className="w-full"
+        >
           <TabsList className="grid w-full grid-cols-3">
             <TabsTrigger value="how-to-use">Como Usar</TabsTrigger>
             <TabsTrigger value="define-problem">Definir Problema</TabsTrigger>
@@ -100,7 +105,10 @@ function App() {
           </TabsContent>
 
           <TabsContent value="examples" className="mt-6">
-            <ExampleLibrary setProblem={setProblem} />
+            <ExampleLibrary
+              setProblem={setProblem}
+              onExampleLoaded={() => setActiveTab("define-problem")}
+            />
           </TabsContent>
         </Tabs>
       </main>
