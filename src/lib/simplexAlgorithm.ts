@@ -40,9 +40,10 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
 
   // Etapa 1: converter para formulário padrão e inicializar o Tableau
   // Para problemas de minimização, converte a função objetivo em maximização
-  const objectiveCoefficients = problem.type === "min"
-    ? problem.objective.map(c => -c)
-    : problem.objective;
+  const objectiveCoefficients =
+    problem.type === "min"
+      ? problem.objective.map((c) => -c)
+      : problem.objective;
 
   // Inicializa as dimensões do tableau
   // Linhas: 1 (objetivo) + numConstraints
@@ -53,21 +54,23 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
   let numSurplus = 0;
   let numArtificial = 0;
 
-  problem.constraints.forEach(constraint => {
+  problem.constraints.forEach((constraint) => {
     if (constraint.type === "<=") {
       numSlack++;
     } else if (constraint.type === ">=") {
       numSurplus++;
-      numArtificial++; 
+      numArtificial++;
     } else if (constraint.type === "=") {
       numArtificial++;
     }
   });
 
-  const totalCols = numVariables + numSlack + numSurplus + numArtificial + 1; // +1 para RHS
+  let totalCols = numVariables + numSlack + numSurplus + numArtificial + 1; // +1 para RHS
   const totalRows = numConstraints + 1; // +1 para função objetivo
 
-  tableau = Array(totalRows).fill(0).map(() => Array(totalCols).fill(0));
+  tableau = Array(totalRows)
+    .fill(0)
+    .map(() => Array(totalCols).fill(0));
 
   // Preenche a linha da função objetivo (primeira linha do quadro)
   for (let j = 0; j < numVariables; j++) {
@@ -81,14 +84,14 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
 
   // Inicializa variáveis ​​básicas para variáveis ​​de folga
   basicVariables = Array(totalRows).fill("");
-  basicVariables[0] = "Z"; 
+  basicVariables[0] = "Z";
 
   problem.constraints.forEach((constraint, i) => {
-    const currentRow = i + 1; 
+    const currentRow = i + 1;
     for (let j = 0; j < numVariables; j++) {
       tableau[currentRow][j] = constraint.coefficients[j];
     }
-    tableau[currentRow][totalCols - 1] = constraint.rhs; 
+    tableau[currentRow][totalCols - 1] = constraint.rhs;
 
     if (constraint.type === "<=") {
       tableau[currentRow][slackIndex] = 1; //variável de folga
@@ -98,22 +101,27 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
       tableau[currentRow][surplusIndex] = -1; // Variável excedente
       tableau[currentRow][artificialIndex] = 1; //Variável artificial
       // Variável básica para Fase I será variável artificial
-      basicVariables[currentRow] = `a${artificialIndex - (numVariables + numSlack + numSurplus) + 1}`;
+      basicVariables[currentRow] = `a${
+        artificialIndex - (numVariables + numSlack + numSurplus) + 1
+      }`;
       surplusIndex++;
       artificialIndex++;
     } else if (constraint.type === "=") {
       tableau[currentRow][artificialIndex] = 1; //Variável artificial
       // Variável básica para Fase I será variável artificial
-      basicVariables[currentRow] = `a${artificialIndex - (numVariables + numSlack + numSurplus) + 1}`;
+      basicVariables[currentRow] = `a${
+        artificialIndex - (numVariables + numSlack + numSurplus) + 1
+      }`;
       artificialIndex++;
     }
   });
 
   // Fase I: Lidar com Variáveis ​​Artificiais
   if (numArtificial > 0) {
-  
     // Cria uma nova função objetivo para a Fase I (minimizar R = soma das variáveis ​​artificiais)
-    const phase1Tableau = Array(totalRows).fill(0).map(() => Array(totalCols).fill(0));
+    const phase1Tableau = Array(totalRows)
+      .fill(0)
+      .map(() => Array(totalCols).fill(0));
     const phase1BasicVariables = [...basicVariables];
 
     // Copia o quadro original para phase1Tableau
@@ -125,9 +133,9 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
 
     // Inicializa a linha R (nova linha da função objetivo 0)
     for (let j = 0; j < totalCols - 1; j++) {
-      phase1Tableau[0][j] = 0; 
+      phase1Tableau[0][j] = 0;
     }
-    phase1Tableau[0][totalCols - 1] = 0; 
+    phase1Tableau[0][totalCols - 1] = 0;
 
     // Ajusta a linha R para variáveis ​​artificiais
     for (let i = 1; i < totalRows; i++) {
@@ -167,9 +175,10 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
       let pivotRow = -1;
       let minRatio = Infinity;
       for (let i = 1; i < totalRows; i++) {
-        if (phase1Tableau[i][pivotCol] > 1e-9) { 
-          const ratio = phase1Tableau[i][totalCols - 1] / phase1Tableau[i][pivotCol];
-          if (ratio >= -1e-9 && ratio < minRatio) { 
+        if (phase1Tableau[i][pivotCol] > 1e-9) {
+          const ratio =
+            phase1Tableau[i][totalCols - 1] / phase1Tableau[i][pivotCol];
+          if (ratio >= -1e-9 && ratio < minRatio) {
             minRatio = ratio;
             pivotRow = i;
           }
@@ -186,7 +195,7 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
             break;
           }
         }
-        
+
         if (allNonPositive) {
           // Todos os coeficientes na coluna pivô são não positivos
           // Na Fase I com variáveis ​​excedentes, isso pode ser normal
@@ -204,7 +213,7 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
               if (foundAlternative) break;
             }
           }
-          
+
           if (!foundAlternative) {
             // Não foram encontradas colunas alternativas com coeficientes positivos
             // Isso pode indicar o fim da Fase I
@@ -214,8 +223,13 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
             continue;
           }
         }
-        
-        return { iterations, solution: { variables: {}, objectiveValue: NaN }, status: "unbounded", message: "Problema ilimitado na Fase I." };
+
+        return {
+          iterations,
+          solution: { variables: {}, objectiveValue: NaN },
+          status: "unbounded",
+          message: "Problema ilimitado na Fase I.",
+        };
       }
 
       const pivotElement = phase1Tableau[pivotRow][pivotCol];
@@ -227,7 +241,9 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
       iterations[iterations.length - 1].pivotElement = pivotElement;
       iterations[iterations.length - 1].pivotRow = pivotRow;
       iterations[iterations.length - 1].pivotColumn = pivotCol;
-      iterations[iterations.length - 1].explanation = `Fase I - Iteração ${phase1IterationCount}: Variável de entrada ${enteringVariable}, Variável de saída ${leavingVariable}, Elemento pivô ${pivotElement}`;
+      iterations[
+        iterations.length - 1
+      ].explanation = `Fase I - Iteração ${phase1IterationCount}: Variável de entrada ${enteringVariable}, Variável de saída ${leavingVariable}, Elemento pivô ${pivotElement}`;
 
       //Executa operação de pivô
       // Divide a linha pivô por elemento pivô
@@ -250,18 +266,28 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
     }
 
     if (phase1Tableau[0][totalCols - 1] > 1e-9) {
-      return { iterations, solution: { variables: {}, objectiveValue: NaN }, status: "infeasible", message: "Problema inviável: A Fase I terminou com um valor objetivo positivo para as variáveis artificiais." };
+      return {
+        iterations,
+        solution: { variables: {}, objectiveValue: NaN },
+        status: "infeasible",
+        message:
+          "Problema inviável: A Fase I terminou com um valor objetivo positivo para as variáveis artificiais.",
+      };
     }
 
     //Remove colunas de variáveis ​​artificiais e linha R (linha 0)
-    const finalTableauPhase1 = Array(totalRows).fill(0).map(() => Array(totalCols - numArtificial).fill(0));
+    const finalTableauPhase1 = Array(totalRows)
+      .fill(0)
+      .map(() => Array(totalCols - numArtificial).fill(0));
     const finalBasicVariablesPhase1 = [...phase1BasicVariables];
-
 
     let currentDestCol = 0;
     for (let j = 0; j < totalCols; j++) {
       // Ignora colunas de variáveis ​​artificiais
-      if (j >= numVariables + numSlack + numSurplus && j < numVariables + numSlack + numSurplus + numArtificial) {
+      if (
+        j >= numVariables + numSlack + numSurplus &&
+        j < numVariables + numSlack + numSurplus + numArtificial
+      ) {
         continue;
       }
 
@@ -272,20 +298,28 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
     }
 
     //Reconstruir a função objetivo original (linha 0)
-    tableau = Array(totalRows).fill(0).map(() => Array(totalCols - numArtificial).fill(0));
+    tableau = Array(totalRows)
+      .fill(0)
+      .map(() => Array(totalCols - numArtificial).fill(0));
     basicVariables = [...finalBasicVariablesPhase1];
 
     // Copia valores de phase1Tableau (excluindo colunas artificiais)
     for (let r = 1; r < totalRows; r++) {
       currentDestCol = 0;
       for (let c = 0; c < totalCols; c++) {
-        if (c >= numVariables + numSlack + numSurplus && c < numVariables + numSlack + numSurplus + numArtificial) {
+        if (
+          c >= numVariables + numSlack + numSurplus &&
+          c < numVariables + numSlack + numSurplus + numArtificial
+        ) {
           continue; //Pular colunas artificiais
         }
         tableau[r][currentDestCol] = finalTableauPhase1[r][currentDestCol];
         currentDestCol++;
       }
     }
+
+    // 🔧 CORREÇÃO DO BUG: Atualizar totalCols após remover colunas artificiais
+    totalCols = totalCols - numArtificial;
 
     // Define os coeficientes originais da função objetivo
     for (let j = 0; j < numVariables; j++) {
@@ -299,7 +333,7 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
         const varIndex = parseInt(basicVar.substring(1)) - 1;
         const factor = tableau[0][varIndex];
         if (factor !== 0) {
-          for (let j = 0; j < totalCols - numArtificial; j++) {
+          for (let j = 0; j < totalCols; j++) {
             tableau[0][j] -= factor * tableau[i][j];
           }
         }
@@ -320,8 +354,8 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
 
     //Encontra a coluna pivo (mais negativa na linha do objetivo)
     let pivotCol = -1;
-    let minVal = 0;
-    for (let j = 0; j < totalCols - numArtificial - 1; j++) {
+    let minVal = -1e-9;
+    for (let j = 0; j < totalCols - 1; j++) {
       if (tableau[0][j] < minVal) {
         minVal = tableau[0][j];
         pivotCol = j;
@@ -329,7 +363,7 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
     }
 
     if (pivotCol === -1) {
-      // Solucaoo otimaencontrada
+      // Solução ótima encontrada
       break;
     }
 
@@ -337,9 +371,9 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
     let pivotRow = -1;
     let minRatio = Infinity;
     for (let i = 1; i < totalRows; i++) {
-      if (tableau[i][pivotCol] > 0) {
-        const ratio = tableau[i][totalCols - numArtificial - 1] / tableau[i][pivotCol];
-        if (ratio < minRatio) {
+      if (tableau[i][pivotCol] > 1e-9) {
+        const ratio = tableau[i][totalCols - 1] / tableau[i][pivotCol];
+        if (ratio >= -1e-9 && ratio < minRatio) {
           minRatio = ratio;
           pivotRow = i;
         }
@@ -349,7 +383,13 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
     if (pivotRow === -1) {
       //Problema ilimitado
 
-      return { iterations, solution: { variables: {}, objectiveValue: NaN }, status: "unbounded", message: "Problema ilimitado: A função objetivo pode ser aumentada indefinidamente." };
+      return {
+        iterations,
+        solution: { variables: {}, objectiveValue: NaN },
+        status: "unbounded",
+        message:
+          "Problema ilimitado: A função objetivo pode ser aumentada indefinidamente.",
+      };
     }
 
     const pivotElement = tableau[pivotRow][pivotCol];
@@ -361,11 +401,13 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
     iterations[iterations.length - 1].pivotElement = pivotElement;
     iterations[iterations.length - 1].pivotRow = pivotRow;
     iterations[iterations.length - 1].pivotColumn = pivotCol;
-    iterations[iterations.length - 1].explanation = `Fase II - Iteração ${iterationCount}: Variável de entrada ${enteringVariable}, Variável de saída ${leavingVariable}, Elemento pivô ${pivotElement}`;
+    iterations[
+      iterations.length - 1
+    ].explanation = `Fase II - Iteração ${iterationCount}: Variável de entrada ${enteringVariable}, Variável de saída ${leavingVariable}, Elemento pivô ${pivotElement}`;
 
     //Executa operacao de pivo
     // Divide a linha pivo por elemento pivo
-    for (let j = 0; j < totalCols - numArtificial; j++) {
+    for (let j = 0; j < totalCols; j++) {
       tableau[pivotRow][j] /= pivotElement;
     }
 
@@ -373,7 +415,7 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
     for (let i = 0; i < totalRows; i++) {
       if (i !== pivotRow) {
         const factor = tableau[i][pivotCol];
-        for (let j = 0; j < totalCols - numArtificial; j++) {
+        for (let j = 0; j < totalCols; j++) {
           tableau[i][j] -= factor * tableau[pivotRow][j];
         }
       }
@@ -385,7 +427,7 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
 
   // Extrai a solução  (mostra apenas as variáveis ​​originais (x1, x2, etc))
   const solutionVariables: { [key: string]: number } = {};
-  
+
   // Inicializa todas as variáveis ​​de decisão originais para 0
   for (let i = 0; i < numVariables; i++) {
     solutionVariables[`x${i + 1}`] = 0;
@@ -395,15 +437,15 @@ export function solveSimplexAlgorithm(problem: Problem): SimplexResult {
   for (let i = 1; i < totalRows; i++) {
     const basicVar = basicVariables[i];
     // Inclui apenas variáveis ​​de decisao originais (x1, x2, x3, etc), não variáveis ​​ociosas ou artificiais
-    if (basicVar.startsWith("x") && !basicVar.startsWith("s") && !basicVar.startsWith("a")) {
+    if (basicVar.startsWith("x")) {
       const varIndex = parseInt(basicVar.substring(1));
       if (varIndex <= numVariables) {
-        solutionVariables[basicVar] = tableau[i][totalCols - numArtificial - 1];
+        solutionVariables[basicVar] = tableau[i][totalCols - 1];
       }
     }
   }
 
-  let objectiveValue = tableau[0][totalCols - numArtificial - 1];
+  let objectiveValue = tableau[0][totalCols - 1];
   if (problem.type === "min") {
     objectiveValue = -objectiveValue; // Reverte para problema de minimização
   }

@@ -3,8 +3,6 @@ import { Input } from "./ui/input";
 import { Label } from "./ui/label";
 import { RadioGroup, RadioGroupItem } from "./ui/radio-group";
 
-import { validateProblemInput } from "@/lib/validation";
-
 interface ProblemInputProps {
   problem: {
     objective: number[];
